@@ -3,23 +3,26 @@
 #Autor: Tomas Galvez
 #Para: CEAB, UVG, Guatemala
 #Creado en agosto 2018
-#Última modificación: 24/08/2018
+#Última modificación: 29/08/2018
 #
 #Módulo de funciones para conexión a una base de datos y
 #generación de gráficas univariable con matplotlib.
 ##################################################################
 
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as pyplt
 import io
 import base64
 import psycopg2 as ppg
 from configparser import ConfigParser
 import pandas as pd
+from mpld3 import plugins, fig_to_html
 
 #Esta función permite fácilmente mostrar u ocultar mensajes de debugging mediante comentado de las instrucciones correspondientes.
 def debugPrint(s):
-    print(s)
-    #pass
+    #print(s)
+    pass
 
 #Función para importar los datos de conexión a la DB almacenados en el archivo database.ini.
 def config(filename='database.ini', section='postgresql'):
@@ -39,6 +42,7 @@ def config(filename='database.ini', section='postgresql'):
 #Funcion para conexión a la DB (depende de config()). Devuelve la conexión o None.
 def connect():
     conn = None
+    cur = None
     try:
         params = config()
 
@@ -75,9 +79,13 @@ def armarQuery(campox, campoy, tabla):
 def query(conn, q):
     if conn is not None:
         cur = conn.cursor()
+        debugPrint("A punto de ejecutar el query con el nuevo cursor")
         cur.execute(q)
+        debugPrint("Se ejecuto el query sin problemas")
         rows = cur.fetchall()
+        debugPrint("Se ejecuto el fetchall sin problemas")
         cur.close()
+        debugPrint("Se cerro el cursor exitosamente")
         return rows
     else:
         print("Connection is None")
@@ -119,54 +127,74 @@ def getTables(conn):
         return tablas
 
 #----Funciones para hacer gráficas univariable por hora, día y mes----
-def plotPorHora(df, campo, scatter = True):
-    img = io.BytesIO()
+def plotConPlugins(fig):#, plot=None):
+    #debugPrint("El parametro plot contiene " + str(plot[0]))
+    plugins.connect(fig, plugins.BoxZoom(button = False))#, plugins.PointLabelTooltip(plot[0]))
+    debugPrint("Se logro conectar el plugin BoxZoom")
+    plot_url = fig_to_html(fig)
 
-    pyplt.clf()
+    debugPrint("A punto de cerrar la figura")
+    pyplt.close(fig)
+
+    return plot_url
+    
+def plotPorHora(df, campo, scatter = True):
+    #img = io.BytesIO()
+
+    #pyplt.clf()
+    fig = pyplt.figure()
+    pyplt.xticks(rotation = 90)
     if (scatter):
         pyplt.plot(df['Date'], df[campo], 'b.') #Se usa un format string para especificar la necesidad de una scatter plot.
     else:
         pyplt.plot(df['Date'], df[campo])
-    pyplt.xticks(rotation = 90)
-    pyplt.savefig(img, format = 'png')
-    img.seek(0)
 
-    plot_url = base64.b64encode(img.getvalue()).decode()
+    #pyplt.savefig(img, format = 'png')
+    #img.seek(0)
 
-    return plot_url
+    #plot_url = base64.b64encode(img.getvalue()).decode()
+    #pyplt.close(fig)
+
+    debugPrint("Antes de ejecutar plotConPlugins en plotPorHora")
+
+    return plotConPlugins(fig)
+    #return plot_url
 
 def plotPorDia(df, campo):
-    img = io.BytesIO()
-    plot_url = base64.b64encode(img.getvalue()).decode()
+    #img = io.BytesIO()
 
     df_resumido_por_dia = df.groupby('Date', as_index = False).agg({campo:'mean'})
     debugPrint("Agrupacion exitosa")
     debugPrint(df_resumido_por_dia.keys())
 
-    pyplt.clf()
-    pyplt.plot(df_resumido_por_dia['Date'], df_resumido_por_dia[campo])
+    #pyplt.clf()
+    fig = pyplt.figure()
     pyplt.xticks(rotation = 90)
-    pyplt.savefig(img, format = 'png')
-    img.seek(0)
+    debugPrint("Antes de mostrar el contenido de fig")
+    debugPrint(fig)
+    debugPrint("Despues de mostrar el contenido de fig")
+    p = pyplt.plot(df_resumido_por_dia['Date'], df_resumido_por_dia[campo])
+    #pyplt.savefig(img, format = 'png')
+    #img.seek(0)
 
-    plot_url = base64.b64encode(img.getvalue()).decode()
-
-    return plot_url
+    #plot_url = base64.b64encode(img.getvalue()).decode()
+    
+    return plotConPlugins(fig)#, p)
 
 def plotPorMes(df, campo):
-    img = io.BytesIO()
-    plot_url = base64.b64encode(img.getvalue()).decode()
+    #img = io.BytesIO()
     
     df_resumido_por_mes = df.groupby('Mes', as_index = False).agg({campo:'mean'})
     debugPrint("Agrupacion exitosa")
     debugPrint(df_resumido_por_mes)
 
-    pyplt.clf()
-    pyplt.plot(df_resumido_por_mes['Mes'], df_resumido_por_mes[campo])
+    #pyplt.clf()
+    fig = pyplt.figure()
     pyplt.xticks(rotation = 90)
-    pyplt.savefig(img, format = 'png')
-    img.seek(0)
+    pyplt.plot(df_resumido_por_mes['Mes'], df_resumido_por_mes[campo])
+    #pyplt.savefig(img, format = 'png')
+    #img.seek(0)
 
-    plot_url = base64.b64encode(img.getvalue()).decode()
+    #plot_url = base64.b64encode(img.getvalue()).decode()
 
-    return plot_url
+    return plotConPlugins(fig)

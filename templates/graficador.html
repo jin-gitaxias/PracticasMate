@@ -6,7 +6,7 @@ graficador.html
 Autor: Tomas Galvez
 Para: CEAB, UVG, Guatemala
 Creado en agosto 2018
-Última modificación: 24/08/2018
+Última modificación: 27/08/2018
 
 Frontend para web app de prueba graficadorSencillo.py.
 ##################################################################
@@ -48,7 +48,8 @@ Frontend para web app de prueba graficadorSencillo.py.
 		</form>
 		{% if graficamos %}
 			<h3>La grafica (chan chan chaaan):</h3><br/>
-			<img src="data:image/png;base64,{{ graficamos }}"/>
+			<!--img src="data:image/png;base64,{{ graficamos }}"/-->
+			{{ graficamos|safe }}
 		{% endif %}
 	</body>
 </html>
