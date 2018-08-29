@@ -3,7 +3,7 @@
 #Autor: Tomas Galvez
 #Para: CEAB, UVG, Guatemala
 #Creado en agosto 2018
-#Última modificación: 24/08/2018
+#Última modificación: 29/08/2018
 #
 #Aplicación FLASK para probar generación de gráficas de data
 #meteorológica usando el módulo graficas.py.
@@ -86,11 +86,15 @@ def graficar(variable, periodo):
         else:
             debugPrint("Sadness")
     elif (periodo == 'Por día'):
+        debugPrint("Entramos a 'Por día'")
         qDia = armarQuery('X..Date', variable, '2014-2018SanJacinto')
+        debugPrint("Se hizo el query en Por día")
         rDia = query(conn, qDia)
+        debugPrint("Se envio el query en Por día")
 
         if rDia is not None:
             dfD = rowsToDataFrame(variable, rDia)
+            debugPrint("A punto de ejecutar plotPorDia")
             resultado = plotPorDia(dfD, variable)
         else:
             debugPrint("Sadness")

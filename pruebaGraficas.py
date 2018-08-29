@@ -14,10 +14,6 @@ campoy = 'Temp.Out'
 
 conn = connect()
 
-r  = getTables(conn)
-print(r)
-
-"""
 try:
     qDia = armarQuery('X..Date', campoy, '2014-2018SanJacinto')
     rDia = query(conn, qDia)
@@ -40,4 +36,4 @@ except (Exception) as e:
 
 finally:
     if (conn is not None):
-        conn.close()"""
+        conn.close()
