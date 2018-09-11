@@ -6,7 +6,7 @@ graficador.html
 Autor: Tomas Galvez
 Para: CEAB, UVG, Guatemala
 Creado en agosto 2018
-Última modificación: 27/08/2018
+Última modificación: 03/09/2018
 
 Frontend para web app de prueba graficadorSencillo.py.
 ##################################################################
@@ -39,6 +39,10 @@ Frontend para web app de prueba graficadorSencillo.py.
 							<option {% if periodo and per == periodo %} selected {% endif %}>{{ per }}</option>
 					{% endfor %}
 				</select>
+				<br/><br/>
+				Fecha de inicio: <input type = "date" name = "fechai" value = "{{ fechai }}"/>
+				&nbsp;
+				Fecha final: <input type = "date" name = "fechaf" value = "{{ fechaf }}"/>
 			</div>
 			{% if nombre %}
 				<input type = "hidden" name = "nombre" value = "{{ nombre }}"/>

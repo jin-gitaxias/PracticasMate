@@ -3,7 +3,7 @@
 #Autor: Tomas Galvez
 #Para: CEAB, UVG, Guatemala
 #Creado en agosto 2018
-#Última modificación: 29/08/2018
+#Última modificación: 05/09/2018
 #
 #Módulo de funciones para conexión a una base de datos y
 #generación de gráficas univariable con matplotlib.
@@ -70,9 +70,45 @@ def connect():
             print('\n\nConnection succesful')
         return conn
 
+#Para centralizar el nombre del campo de fecha.
+def getDateField():
+    r = "X..Date"
+    return r
+
+#Para centralizar el nombre del campo de meses.
+def getMonthField():
+    r = "Mes"
+    return r
+
+#Arma lo que va despues de WHERE para el caso especifico de fechas.
+def armarWhereRangoFechas(fechai = None, fechaf = None):
+    s1 = s2 = ""
+    if (fechai is not None):
+        s1 += '"' + getDateField() + '" >= \'' + fechai + '\'::date'
+        if (fechaf is not None):
+            s1 += " AND "
+
+    if (fechaf is not None):
+        s2 += '"' + getDateField() + '" <= \'' + fechaf + '\'::date'    
+    
+    return  s1 + s2
+
 #Función para armar queries de dos campos. Su propósito es obtener los ejes para una gráfica univariable.
-def armarQuery(campox, campoy, tabla):
-    s = 'SELECT \"' + campox + '\", \"' + campoy + '\" FROM \"' + tabla + '\"'
+def armarQuery(tabla, campox, campoy = None, where = None):
+    if (campox == "datefield"):
+        campox = getDateField()
+    elif (campox == "monthfield"):
+          campox = getMonthField()
+
+    s = 'SELECT \"' + campox + '\"'
+
+    if (campoy is not None):
+        s += ', \"' + campoy + '\"'
+
+    s += ' FROM \"' + tabla + '\"'
+
+    if (where is not None):
+        s += " WHERE " + where
     return s
 
 #Realiza un query provisto en el parámetro q. Devuelve el resultado de la consulta o None.
@@ -138,16 +174,16 @@ def plotConPlugins(fig):#, plot=None):
 
     return plot_url
     
-def plotPorHora(df, campo, scatter = True):
+def plotPorHora(df, campo, scatter = True, xName = 'Date'):
     #img = io.BytesIO()
 
     #pyplt.clf()
     fig = pyplt.figure()
     pyplt.xticks(rotation = 90)
     if (scatter):
-        pyplt.plot(df['Date'], df[campo], 'b.') #Se usa un format string para especificar la necesidad de una scatter plot.
+        pyplt.plot(df[xName], df[campo], 'b.') #Se usa un format string para especificar la necesidad de una scatter plot.
     else:
-        pyplt.plot(df['Date'], df[campo])
+        pyplt.plot(df[xName], df[campo])
 
     #pyplt.savefig(img, format = 'png')
     #img.seek(0)
@@ -160,10 +196,10 @@ def plotPorHora(df, campo, scatter = True):
     return plotConPlugins(fig)
     #return plot_url
 
-def plotPorDia(df, campo):
+def plotPorDia(df, campo, xName = 'Date'):
     #img = io.BytesIO()
 
-    df_resumido_por_dia = df.groupby('Date', as_index = False).agg({campo:'mean'})
+    df_resumido_por_dia = df.groupby(xName, as_index = False).agg({campo:'mean'})
     debugPrint("Agrupacion exitosa")
     debugPrint(df_resumido_por_dia.keys())
 
@@ -173,7 +209,7 @@ def plotPorDia(df, campo):
     debugPrint("Antes de mostrar el contenido de fig")
     debugPrint(fig)
     debugPrint("Despues de mostrar el contenido de fig")
-    p = pyplt.plot(df_resumido_por_dia['Date'], df_resumido_por_dia[campo])
+    p = pyplt.plot(df_resumido_por_dia[xName], df_resumido_por_dia[campo])
     #pyplt.savefig(img, format = 'png')
     #img.seek(0)
 
@@ -181,17 +217,17 @@ def plotPorDia(df, campo):
     
     return plotConPlugins(fig)#, p)
 
-def plotPorMes(df, campo):
+def plotPorMes(df, campo, xName = 'Date'):
     #img = io.BytesIO()
     
-    df_resumido_por_mes = df.groupby('Mes', as_index = False).agg({campo:'mean'})
+    df_resumido_por_mes = df.groupby(xName, as_index = False).agg({campo:'mean'})
     debugPrint("Agrupacion exitosa")
     debugPrint(df_resumido_por_mes)
 
     #pyplt.clf()
     fig = pyplt.figure()
     pyplt.xticks(rotation = 90)
-    pyplt.plot(df_resumido_por_mes['Mes'], df_resumido_por_mes[campo])
+    pyplt.plot(df_resumido_por_mes[xName], df_resumido_por_mes[campo])
     #pyplt.savefig(img, format = 'png')
     #img.seek(0)
 
