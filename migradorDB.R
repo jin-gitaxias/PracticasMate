@@ -71,7 +71,8 @@ armarDf <- function(ubicacion, archivoDeDatos){
   }
   
   datos[["X..Date"]] <- as.Date(as.POSIXct(datos[["X..Date"]], format="%d/%m/%y")) #Conversion de columna de fecha a tipo datetime (para agrupacion y resumen por dia)
-  datos$Mes <- format(datos$X..Date, "%y %m")
+  datos$Mes <- format(datos$X..Date, "%m/%y")
+  datos[["Mes"]] <- as.Date(as.POSIXct(paste("01/", datos[["Mes"]]), format="%d/%m/%y"))
   debug_print("Columna Mes creada exitosamente")
   
   return(datos)

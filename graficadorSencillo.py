@@ -29,7 +29,7 @@ def index():
 @app.route('/graficador', methods = ['GET'])
 @app.route('/graficador#grafica', methods = ['GET'])
 def graficador():
-    name = tabla = fechaInicial = fechaFinal = ""
+    name = tabla = fechaInicial = fechaFinal = variable = periodo = ""
     
     if ("nombre" in request.args):
         name = request.args['nombre']
@@ -60,16 +60,16 @@ def graficador():
         if v[1] in ['float4']:
             variables.append(v[0])
     periodos = ['Por hora', 'Por día', 'Por mes']
-    variable = ""
-    periodo = ""
 
-    try:
+    if ('xvar' in request.args):
         variable = request.args['xvar']
-        periodo = request.args['yvar']
-        debugPrint("La xvar es " + variable)
-        debugPrint("La yvar es " + periodo)
 
-        
+    if ('yvar' in request.args):
+        periodo = request.args['yvar']
+    debugPrint("La xvar es " + variable)
+    debugPrint("La yvar es " + periodo)
+
+    try:        
         grafica = graficar(variable, periodo, tabla, fechaInicial, fechaFinal)
         debugPrint("Grafica generada\n")
 

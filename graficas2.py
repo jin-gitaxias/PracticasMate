@@ -46,7 +46,7 @@ def plotPorHora(df, campo, scatter = True, xName = 'Date'):
 
     #pyplt.clf()
     fig = pyplt.figure()
-    pyplt.xticks(rotation = 90)
+    #pyplt.xticks(rotation = 'vertical')
     if (scatter):
         pyplt.plot(df[xName], df[campo], 'b.') #Se usa un format string para especificar la necesidad de una scatter plot.
     else:
@@ -72,7 +72,7 @@ def plotPorDia(df, campo, xName = 'Date'):
 
     #pyplt.clf()
     fig = pyplt.figure()
-    pyplt.xticks(rotation = 90)
+    #pyplt.xticks(rotation = 'vertical')
     debugPrint("Antes de mostrar el contenido de fig")
     debugPrint(fig)
     debugPrint("Despues de mostrar el contenido de fig")
@@ -93,7 +93,7 @@ def plotPorMes(df, campo, xName = 'Date'):
 
     #pyplt.clf()
     fig = pyplt.figure()
-    pyplt.xticks(rotation = 90)
+    #pyplt.xticks(rotation = 'vertical')
     pyplt.plot(df_resumido_por_mes[xName], df_resumido_por_mes[campo])
     #pyplt.savefig(img, format = 'png')
     #img.seek(0)
