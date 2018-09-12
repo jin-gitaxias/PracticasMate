@@ -3,19 +3,23 @@
 #Autor: Tomas Galvez
 #Para: CEAB, UVG, Guatemala
 #Creado en agosto 2018
-#Última modificación: 05/09/2018
+#Última modificación: 12/09/2018
 #
 #Aplicación FLASK para probar generación de gráficas de data
 #meteorológica usando el módulo graficas.py.
 ##################################################################
 
 from flask import Flask, url_for, render_template, request
-from graficas import *
+#from graficas import *
+from graficas2 import *
+from db import *
+from SQLqueries import *
+from testing import debugPrint
 
 app = Flask(__name__)
 #app.config['SERVER_NAME'] = '127.0.0.1:5000/'
 
-conn = connect()
+connect()
 
 @app.route('/')
 @app.route('/index')
@@ -30,7 +34,7 @@ def graficador():
     if ("nombre" in request.args):
         name = request.args['nombre']
 
-    tablas = getTables(conn)
+    tablas = getTables()
 
     if ("table" in request.args):
         tabla = request.args['table']
@@ -52,7 +56,7 @@ def graficador():
         fechaFinal = rangoFechas[1]
 
     variables = []
-    for v in getColumns(conn, tabla):
+    for v in getColumns(tabla):
         if v[1] in ['float4']:
             variables.append(v[0])
     periodos = ['Por hora', 'Por día', 'Por mes']
@@ -92,7 +96,7 @@ def formatDate(y, m, d):
 def getRangoFechas(table):
     resultado = None
     q = armarQuery(table, "datefield")
-    rq = query(conn, q)
+    rq = query(q)
 
     if rq is not None:
         fechaMenor = rq[0][0]
@@ -106,11 +110,15 @@ def getRangoFechas(table):
     
 def graficar(variable, periodo, tabla, fechai = None, fechaf = None):
     resultado = None
+    if (fechai is not None):
+        fechai = castFecha(fechai)
+    if (fechaf is not None):
+        fechaf = castFecha(fechaf)
     if (periodo == 'Por hora'):
         debugPrint("Si agarramos onda\n")
-        qHora = armarQuery(tabla, 'datefield', variable, armarWhereRangoFechas(fechai, fechaf))
+        qHora = armarQuery(tabla, 'datetimefield', variable, armarWhereRangoFechas(fechai, fechaf))
         debugPrint("El query es " + qHora)
-        rHora = query(conn, qHora)
+        rHora = query(qHora)
 
         if rHora is not None:
             debugPrint("Obtuvimos resultados rHora por la gracia de Dios")
@@ -125,7 +133,7 @@ def graficar(variable, periodo, tabla, fechai = None, fechaf = None):
         qDia = armarQuery(tabla, 'datefield', variable, armarWhereRangoFechas(fechai, fechaf))
         debugPrint("El query es " + qDia)
         debugPrint("Se hizo el query en Por día")
-        rDia = query(conn, qDia)
+        rDia = query(qDia)
         debugPrint("Se envio el query en Por día")
 
         if rDia is not None:
@@ -137,7 +145,7 @@ def graficar(variable, periodo, tabla, fechai = None, fechaf = None):
     elif (periodo == 'Por mes'):
         qMes = armarQuery(tabla, 'monthfield', variable, armarWhereRangoFechas(fechai, fechaf))
         debugPrint("El query es " + qMes)
-        rMes = query(conn, qMes)
+        rMes = query(qMes)
 
         if rMes is not None:
             dfM = rowsToDataFrame(variable, rMes)
