@@ -15,6 +15,7 @@ from graficas import *
 from db import *
 from SQLqueries import *
 from testing import debugPrint
+from os import getcwd
 
 app = Flask(__name__)
 #app.config['SERVER_NAME'] = '127.0.0.1:5000/'
@@ -49,65 +50,40 @@ def graficador():
     debugPrint(fechaFinal)
     
     s = translateToQuery(variable, periodo, tabla, fechaInicial, fechaFinal)
-    df = None
 
     if (s is not None):
+        debugPrint("A punto de crear archivo descargable")
+        filenameForDownload = secure_filename(variable + periodo + "De" + fechaInicial + "A" + fechaFinal + tabla)
         try:
-            df = getData(s, variable, periodo)
-        except Exception as err:
-            debugPrint("Hubo excepcion al intentar obtener los datos\n")
-            debugPrint(err)
-            return render_template('graficador.html', nombre = name, variables = variables, periodos = periodos, tablas = tablas,
-                                       tabla = tabla,
-                                       periodo = periodo,
-                                       variable = variable,
-                                       fechai = fechaInicial,
-                                       fechaf = fechaFinal)
-
-        try:
-            debugPrint("A punto de crear archivo descargable")
-            filenameForDownload = secure_filename(variable + periodo + "De" + fechaInicial + "A" + fechaFinal + tabla)
-            dfToCSV(df,filenameForDownload)
-            debugPrint("Archivo descargable creado.")
-            
+            rd = exportFile(s, filenameForDownload)
+            debugPrint("Archivo descargable creado. Resultado: " + str(rd))
         except Exception as err:
             debugPrint("Hubo excepcion al intentar crear archivo descargable\n")
             debugPrint(err)
-
-        finally:
-            try:
-                df = getData(s, variable, periodo)
-                scatter = False
-                if (periodo == "Por hora"):
-                    scatter = True
-                grafica = plotear(df, variable, scatter = scatter)
-                debugPrint("Grafica generada\n")
-
-                return render_template('graficador.html', nombre = name, variables = variables, periodos = periodos, tablas = tablas,
-                                       tabla = tabla,
-                                       periodo = periodo,
-                                       variable = variable,
-                                       fechai = fechaInicial,
-                                       fechaf = fechaFinal,
-                                       graficamos = grafica, 
-                                       filenameForDownload = filenameForDownload)
-            except Exception as err:
-                debugPrint("Hubo excepcion al intentar graficar\n")
-                debugPrint(err)
-                return render_template('graficador.html', nombre = name, variables = variables, periodos = periodos, tablas = tablas,
-                                       tabla = tabla,
-                                       periodo = periodo,
-                                       variable = variable,
-                                       fechai = fechaInicial,
-                                       fechaf = fechaFinal)
     else:
         debugPrint("s es None")
+
+    try:        
+        grafica = graficar(s, periodo, variable)
+        debugPrint("Grafica generada\n")
+
         return render_template('graficador.html', nombre = name, variables = variables, periodos = periodos, tablas = tablas,
-                                       tabla = tabla,
-                                       periodo = periodo,
-                                       variable = variable,
-                                       fechai = fechaInicial,
-                                       fechaf = fechaFinal)
+                               tabla = tabla,
+                               periodo = periodo,
+                               variable = variable,
+                               fechai = fechaInicial,
+                               fechaf = fechaFinal,
+                               graficamos = grafica, 
+                               filenameForDownload = filenameForDownload)
+    except Exception as err:
+        debugPrint("Hubo excepcion al intentar graficar\n")
+        debugPrint(err)
+        return render_template('graficador.html', nombre = name, variables = variables, periodos = periodos, tablas = tablas,
+                               tabla = tabla,
+                               periodo = periodo,
+                               variable = variable,
+                               fechai = fechaInicial,
+                               fechaf = fechaFinal)
     
 def getQueryParams():
     name = tabla = fechaInicial = fechaFinal = variable = periodo = ""
@@ -190,13 +166,21 @@ def translateToQuery(variable, periodo, tabla, fechai = None, fechaf = None):
         
     return q
 
-def getData(q, var, per = "Por hora"):
-    dfD = None
+def graficar(q, per, var):
+    resultado = None
     data = query(q)
-
     if data is not None:
-        dfD = rowsToDataFrame(var, data, per = per)
+        dfD = rowsToDataFrame(var, data)
+        if (per == 'Por hora'):
+            resultado = plotPorHora(dfD, var)
+        elif (per == 'Por día'):
+            resultado = plotPorDia(dfD, var)
+        elif (per == 'Por mes'):
+            resultado = plotPorMes(dfD, var)
+        else:
+            debugPrint("El resultado será None porque no le atinamos al período")
+            return None
     else:
         debugPrint("Sadness")
 
-    return dfD
+    return resultado

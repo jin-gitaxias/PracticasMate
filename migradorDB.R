@@ -1,8 +1,9 @@
 library(RPostgres)
 library(chron)
+library(utils)
 
 debug_print <- function(log){
-  #print(log)
+  print(log)
 }
 
 conectar <- function() {
@@ -15,6 +16,27 @@ conectar <- function() {
   print(summary(con))
   
   con 
+}
+
+insert <- function(vec, posiciones, reemplazos){
+  for (p in length(posiciones):1){
+    vec <- append(vec, reemplazos[[p]], after = posiciones[[p]])
+    #print(vec)
+  }
+  
+  vec
+}
+
+ajustarEncabezados <- function(primeraLinea, segundaLinea){
+  
+  primeraLinea[[30]] <- "InAir"
+  primeraLinea <- primeraLinea[!primeraLinea == "Air"]
+  primeraLinea <- primeraLinea[!primeraLinea == "Arc."]
+  
+  primeraLinea <- insert(primeraLinea, c(0, 0, 14, 14, 30), c("-", "-", "-", "-", "-"))
+  debug_print(primeraLinea)
+  
+  return (paste(primeraLinea, segundaLinea))
 }
 
 armarDf <- function(ubicacion, archivoDeDatos){
@@ -32,7 +54,9 @@ armarDf <- function(ubicacion, archivoDeDatos){
   debug_print(header1)
   header2 <- scan(archivo, nlines=1, skip=1, what=character())
   debug_print(header2)
-  header <- paste(header1, header2)
+  #header <- paste(header1, header2)
+  header <- ajustarEncabezados(header1, header2)
+  #debug_print(paste("***", header, "***"))
   tidy_header <- make.names(header, unique = TRUE) #Hacer nombres de columnas mas faciles de referenciar
   debug_print(tidy_header)
   
@@ -41,6 +65,7 @@ armarDf <- function(ubicacion, archivoDeDatos){
   names(datos) <- tidy_header
   debug_print("read.table exitoso")
   debug_print(str(datos))
+  debug_print(datos$X..Time)
   
   #Se modifican los indicadores de AM/PM en las horas para el reconocimiento de acuerdo al locale elegido (C)
   datos$X..Time <- gsub("a", "am", datos$X..Time)
@@ -80,7 +105,7 @@ armarDf <- function(ubicacion, archivoDeDatos){
 
 out <- tryCatch(
   {
-    d <- as.data.frame(armarDf("C:/Users/djincer/Desktop/estacionesMeto", "backup2014to2018abril30_sanjacinto.txt"))
+    d <- as.data.frame(armarDf("C:/Users/djincer/Desktop/estacionesMeto", "SanJacintoJulio_12_09_2018.txt"))
     dbc <- conectar()
     dbWriteTable(dbc, name="2014-2018SanJacinto", value=d, row.names=FALSE, overwrite=TRUE)
   },

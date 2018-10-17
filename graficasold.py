@@ -3,7 +3,7 @@
 #Autor: Tomas Galvez
 #Para: CEAB, UVG, Guatemala
 #Creado en septiembre 2018
-#Última modificación: 11/09/2018
+#Última modificación: 12/09/2018
 #
 #Módulo de funciones para generación de gráficas univariable en
 #HTML con matplotlib y mpld3.

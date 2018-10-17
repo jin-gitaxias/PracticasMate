@@ -3,7 +3,7 @@
 #Autor: Tomas Galvez
 #Para: CEAB, UVG, Guatemala
 #Creado en septiembre 2018
-#Última modificación: 12/09/2018
+#Última modificación: 17/10/2018
 #
 #Módulo de funciones para conexión y manejo de una base de datos
 #PostgreSQL con psycopg2 y configparser.
@@ -12,6 +12,7 @@
 import psycopg2 as ppg
 from configparser import ConfigParser
 from testing import debugPrint
+from os import getcwd
 
 conn = None
 
@@ -96,12 +97,28 @@ def getColumns(table):
 def getTables():
     if conn is not None:
         cur = conn.cursor()
-        cur.execute("""SELECT table_name FROM information_schema.tables
-                    WHERE table_schema = 'public'""")
-        tablas = list(cur.fetchall()[0])
+        cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
+        tablas = list(cur.fetchall())
+        for t in range(len(tablas)):
+            tablas[t] = tablas[t][0]
         cur.close()
         return tablas
-
+        
 #Convierte una fecha en formato YYYY/MM/DD a algo reconocible por PostgreSQL.
 def castFecha(fecha):
     return '\'' + fecha + '\'::date'
+
+#Metodo para exportación de resultados de un query a archivo csv. Inutilizado
+#(se reemplazó por exportación de csv mediante Pandas).
+def exportFile(query, filename = 'datosMeteorologicosUVG'):
+    r = 0
+    if conn is not None:
+        f = open(getcwd() + '\\descargas\\' + filename + '.csv', 'w')
+        s = 'COPY (' + query + ') TO STDOUT WITH CSV HEADER'
+        debugPrint("El comando COPY resultante es: " + str(s))
+        cur = conn.cursor()
+        debugPrint("Ejecutando COPY")
+        r = cur.copy_expert(s, f)
+        cur.close()
+        f.close()
+    return(r)

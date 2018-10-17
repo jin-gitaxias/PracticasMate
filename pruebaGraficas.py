@@ -9,6 +9,9 @@
 ##################################################################
 
 from graficas import *
+import os
+
+print(os.getcwd())
 
 campoy = 'Temp.Out'
 
