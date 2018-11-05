@@ -81,6 +81,10 @@ def plotear(df, campo, scatter = True, xName = 'Date'):
         p = pyplt.plot(df[xName], df[campo], 'b.') #Se usa un format string para especificar la necesidad de una scatter plot.
     else:
         p = pyplt.plot(df[xName], df[campo])
+		
+    pyplt.xlabel(xName)
+    pyplt.ylabel(campo)
+    pyplt.title("Cambios en el registro de " + str(campo))
 
     debugPrint("Antes de mostrar el contenido de fig")
     debugPrint(fig)

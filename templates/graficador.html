@@ -6,7 +6,7 @@ graficador.html
 Autor: Tomas Galvez
 Para: CEAB, UVG, Guatemala
 Creado en agosto 2018
-Última modificación: 29/10/2018
+Última modificación: 05/11/2018
 
 Frontend para web app de prueba graficadorSencillo.py.
 
@@ -32,6 +32,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		<h1>Bienvenid@</h1>
 		{% if nombre %}
 			<h2>{{ nombre }}</h2>
+			{% if nombre == 'admin'%} <!-- Sólo por poner algo. Esto debería requerir un apropiado proceso de autenticación previo. -->
+				<div>
+					<h2> Panel de administración </h2>
+					<div>
+						<form action = "/cargarData" method = "POST" enctype="multipart/form-data">
+							<input type = "hidden" name = "nombre" value = "{{ nombre }}"/>
+							Seleccione archivo CSV o TXT con formato CSV:<br/>
+							<input type = "file" name = "file"><br/><br/>
+							<input type = "submit" value = "Cargar"/>
+						</form>
+					<div/>
+					<div>
+					<div/>
+				</div>
+			{% endif %}
 		{% endif %}
 		<form action = "#grafica">
 			<div class = "opciones">

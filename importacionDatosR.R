@@ -76,7 +76,7 @@ for (columna in columnas_a_convertir){
 datos[["X..Date"]] <- as.POSIXct(datos[["X..Date"]], format="%d/%m/%Y") #Conversion de columna de fecha a tipo datetime (para agrupacion y resumen por dia)
 datos$Mes <- format(datos$X..Date, "%y %m")
 
-#datos_agrupados es el data frame con los grupos anados (pero los datos intactos)
+#datos_agrupados es el data frame con los grupos asignados (pero los datos intactos)
 datos_agrupados_por_dia <- group_by(datos, X..Date) #Agrupacion de datos por dia
 datos_agrupados_por_mes <- group_by(datos, Mes) #Agrupacion de datos por mes
 

@@ -3,7 +3,7 @@
 #Autor: Tomas Galvez
 #Para: CEAB, UVG, Guatemala
 #Creado en junio 2018
-#Ultima modificacion: 29/10/2018
+#Ultima modificacion: 05/11/2018
 #
 #Script para migraci√≥n a una base de datos de los datos exportados
 #en archivos de texto por estaciones meteorologicas del CEAB.
@@ -30,17 +30,19 @@
 library(RPostgres)
 library(chron)
 library(utils)
+library(tcltk)
 
 debug_print <- function(log){
   print(log)
 }
 
-conectar <- function() {
+conectar <- function() { #Esto vamos a tener que manejarlo con el mismo database.ini
   dbname <- ""
   user <- ""
   password <- ""#scan("pgpass", what="")
   #host <- ""
-  con <- dbConnect(RPostgres::Postgres(), user=user, dbname=dbname)
+  debug_print("Conectando a la DB...")
+  con <- dbConnect(RPostgres::Postgres(), user=user, dbname=dbname, password=password)
   
   print(summary(con))
   
@@ -68,16 +70,16 @@ ajustarEncabezados <- function(primeraLinea, segundaLinea){
   return (paste(primeraLinea, segundaLinea))
 }
 
-armarDf <- function(ubicacion, archivoDeDatos){
+armarDf <- function(archivo){
   #----Obtencion y curacion de datos----
   
   locale_original_LC_TIME <- Sys.getlocale("LC_TIME") 
   Sys.setlocale("LC_TIME", "C") #Modificar locale para reconocimiento de horas (el original se almacena en locale_original y se reestablece al final del script)
   
   #Importacion y formato de datos
-  setwd(ubicacion) #"C:/Users/djincer/Desktop/estacionesMeto"
-  ubicacionYArchivo <- c(getwd(), paste("/", archivoDeDatos, sep="")) #backup2014to2018abril30_sanjacinto.txt
-  archivo <- paste(ubicacionYArchivo, collapse="")
+  #setwd(ubicacion) #"C:/Users/djincer/Desktop/estacionesMeto"
+  #ubicacionYArchivo <- c(getwd(), paste("/", archivoDeDatos, sep="")) #backup2014to2018abril30_sanjacinto.txt
+  #archivo <- paste(ubicacionYArchivo, collapse="")
   debug_print(archivo)
   header1 <- scan(archivo, nlines=1, what=character())
   debug_print(header1)
@@ -132,18 +134,32 @@ armarDf <- function(ubicacion, archivoDeDatos){
   return(datos)
 }
 
+resultadoCarga <- "No se ha logrado cargar los datos. Por favor intente de nuevo m·s tarde."
 out <- tryCatch(
   {
-    d <- as.data.frame(armarDf("C:/Users/djincer/Desktop/estacionesMeto", "SanJacintoJulio_12_09_2018.txt"))
+    myFile <- commandArgs(trailingOnly = TRUE)
+    if (length(myFile) == 0) {
+      stop("Al menos debe ser provisto un achivo.n", call.=FALSE)
+    }
+    d <- as.data.frame(armarDf(myFile))
+    debug_print("Data frame armado")
+    #debug_print(d)
     dbc <- conectar()
-    dbWriteTable(dbc, name="2014-2018SanJacinto", value=d, row.names=FALSE, overwrite=TRUE)
+    debug_print("Conectados a la DB")
+    myFileSansExt <- tools::file_path_sans_ext(basename(myFile))
+    debug_print(paste("myFileSansExt contiene ", myFileSansExt))
+    dbWriteTable(dbc, name=myFileSansExt, value=d, row.names=FALSE, overwrite=TRUE)
+    debug_print("WriteTable concluido")
+    resultadoCarga <- paste("Carga exitosa de la tabla: ", myFileSansExt)
   },
   error=function(cond){
-    message("Claveles")
-    message(cond)
+    resultadoCarga <- paste("OcurriÛ un error al migrar los datos:", cond)
     return(NA)
   }, finally={
     print("Desde el finally")
+    msgBox <- tkmessageBox(title = "Aviso de R", message = resultadoCarga, icon = "info", type = "ok")
+    tcl("wm", "attributes", msgBox, topmost = TRUE)
+    tcl("wm", "attributes", msgBox, topmost = FALSE)
     dbDisconnect(dbc)
   }
 )

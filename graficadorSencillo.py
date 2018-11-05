@@ -3,7 +3,7 @@
 #Autor: Tomas Galvez
 #Para: CEAB, UVG, Guatemala
 #Creado en agosto 2018
-#Última modificación: 29/10/2018
+#Última modificación: 05/11/2018
 #
 #Aplicación FLASK para probar generación de gráficas de data
 #meteorológica usando el módulo graficas.py.
@@ -24,18 +24,57 @@
 #along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##################################################################
 
-from flask import Flask, url_for, render_template, request, send_from_directory
+from flask import Flask, url_for, render_template, request, send_from_directory, redirect
 from werkzeug.utils import secure_filename
 from graficas import *
 from db import *
 from SQLqueries import *
 from testing import debugPrint
+import subprocess as sp
+import os
 
 app = Flask(__name__)
+UPLOAD_FOLDER = getcwd() + "\\cargas\\"
+ALLOWED_EXTENSIONS = set(['txt', 'csv'])
+DOWNLOAD_FOLDER = getcwd() + "\\descargas\\"
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
 #app.config['SERVER_NAME'] = '127.0.0.1:5000/'
 
 connect()
 
+@app.route('/cargarData', methods = ['POST'])
+def cargarData():
+    name = ""
+    if ("nombre" in request.form):
+        name = request.form['nombre']
+
+    try:
+        if request.method == 'POST':
+            debugPrint('Chequeando que venga el archivo...')
+            # check if the post request has the file part
+            if 'file' not in request.files:
+                debugPrint('No viene archivo')
+                return redirect(request.url)
+            file = request.files['file']
+            # if user does not select file, browser also
+            # submit an empty part without filename
+            debugPrint('Chequeando que el archivo haya sido seleccionado...')
+            if file.filename == '':
+                debugPrint('No se ha seleccionado un archivo')
+                return redirect(request.url)
+            debugPrint('Chequeando si todo bien para proceder...')
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                destino = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(destino)
+                sp.check_call(['Rscript', 'migradorDB.R', destino], shell = True)
+    except Exception as err:
+        debugPrint("Hubo excepcion al intentar obtener los datos\n")
+        debugPrint(err)
+    finally:
+        return redirect('/graficador?nombre=' + name)
+    
 @app.route('/')
 @app.route('/index')
 def index():
@@ -43,8 +82,8 @@ def index():
 
 @app.route('/graficador/<filename>')
 def download(filename):
-    downloads = getcwd() + "\\descargas\\"
-    return send_from_directory(directory=downloads, filename = filename, mimetype = 'text/csv', as_attachment = True)
+    #downloads = getcwd() + "\\descargas\\"
+    return send_from_directory(directory=app.config['DOWNLOAD_FOLDER'], filename = filename, mimetype = 'text/csv', as_attachment = True)
 
 @app.route('/graficador', methods = ['GET'])
 @app.route('/graficador#grafica', methods = ['GET'])
@@ -123,7 +162,12 @@ def graficador():
                                        variable = variable,
                                        fechai = fechaInicial,
                                        fechaf = fechaFinal)
-    
+
+#De http://flask.pocoo.org/docs/1.0/patterns/fileuploads/
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+   
 def getQueryParams():
     name = tabla = fechaInicial = fechaFinal = variable = periodo = ""
     
