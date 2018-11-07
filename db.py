@@ -3,7 +3,7 @@
 #Autor: Tomas Galvez
 #Para: CEAB, UVG, Guatemala
 #Creado en septiembre 2018
-#Última modificación: 29/10/2018
+#Última modificación: 07/11/2018
 #
 #Módulo de funciones para conexión y manejo de una base de datos
 #PostgreSQL con psycopg2 y configparser.
@@ -53,7 +53,10 @@ def connect():
     try:
         params = config()
 
-        print(params)
+        with open(".Renviron", "w") as f:
+            f.write("PGHOST=" + params["host"] + "\nPGUSER=" + params["user"] + "\nPGPASSWORD=" + params["password"] + "\nDBNAME=" + params["database"])
+        f.close()
+        #print(params)
 
         print('Connecting to the PostgreSQL database...')
         conn = ppg.connect(**params)

@@ -3,7 +3,7 @@
 #Autor: Tomas Galvez
 #Para: CEAB, UVG, Guatemala
 #Creado en junio 2018
-#Ultima modificacion: 05/11/2018
+#Ultima modificacion: 07/11/2018
 #
 #Script para migración a una base de datos de los datos exportados
 #en archivos de texto por estaciones meteorologicas del CEAB.
@@ -36,13 +36,9 @@ debug_print <- function(log){
   print(log)
 }
 
-conectar <- function() { #Esto vamos a tener que manejarlo con el mismo database.ini
-  dbname <- ""
-  user <- ""
-  password <- ""#scan("pgpass", what="")
-  #host <- ""
+conectar <- function() { #Manejado con un .Renviron file.
   debug_print("Conectando a la DB...")
-  con <- dbConnect(RPostgres::Postgres(), user=user, dbname=dbname, password=password)
+  con <- dbConnect(RPostgres::Postgres(), user=Sys.getenv("PGUSER"), dbname=Sys.getenv("DBNAME"), password=Sys.getenv("PGPASSWORD"))
   
   print(summary(con))
   
@@ -77,9 +73,6 @@ armarDf <- function(archivo){
   Sys.setlocale("LC_TIME", "C") #Modificar locale para reconocimiento de horas (el original se almacena en locale_original y se reestablece al final del script)
   
   #Importacion y formato de datos
-  #setwd(ubicacion) #"C:/Users/djincer/Desktop/estacionesMeto"
-  #ubicacionYArchivo <- c(getwd(), paste("/", archivoDeDatos, sep="")) #backup2014to2018abril30_sanjacinto.txt
-  #archivo <- paste(ubicacionYArchivo, collapse="")
   debug_print(archivo)
   header1 <- scan(archivo, nlines=1, what=character())
   debug_print(header1)

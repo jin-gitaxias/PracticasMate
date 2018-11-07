@@ -1,6 +1,7 @@
 backup2014to2018abril30_sanjacinto.txt
-database.ini
-descargas/
+descargas/*
+cargas/*
 __pycache__/
 .RData
 .Rhistory
+.Renviron

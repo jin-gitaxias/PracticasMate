@@ -36,7 +36,7 @@ import os
 app = Flask(__name__)
 UPLOAD_FOLDER = getcwd() + "\\cargas\\"
 ALLOWED_EXTENSIONS = set(['txt', 'csv'])
-DOWNLOAD_FOLDER = getcwd() + "\\descargas\\"
+DOWNLOAD_FOLDER = getcwd() + "\\descargas\\" #Revisar como configurar correctamente el folder de descargas
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
 #app.config['SERVER_NAME'] = '127.0.0.1:5000/'
