@@ -32,7 +32,10 @@ from os import getcwd
 conn = None
 
 #Función para importar los datos de conexión a la DB almacenados en el archivo database.ini.
-def config(filename='database.ini', section='postgresql'):
+#El nombre que se usa es databaseLocal.ini para referenciar un archivo no versionado que
+#contiene las credenciales. El database.ini no tiene credenciales, por seguridad. En la
+#versión de producción, se debería cambiar el nombre de regreso a database.ini en esta función.
+def config(filename='databaseLocal.ini', section='postgresql'):
     parser= ConfigParser()
     parser.read(filename)
 

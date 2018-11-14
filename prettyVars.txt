@@ -1,0 +1,31 @@
+Temp.Out->Temperatura externa (°C)
+Hi.Temp->Temperaturas máximas
+Low.Temp->Temperaturas mínimas
+Out.Hum->Humedad externa
+Dew.Pt.->Punto de rocío (°C)
+Wind.Speed->Velocidad del viento
+Wind.Run->Wind.Run
+Hi.Speed->Velocidad máxima del viento
+Wind.Chill->Wind.Chill
+Heat.Index->Índice de calor
+THW.Index->Índice THW
+THSW.Index->Índice THSW
+X..Bar->X..Bar
+X..Rain->X..Rain
+Rain.Rate->Tasa de lluvia
+Solar.Rad.->Radiación solar
+Solar.Energy->Energía solar
+Hi.Rad.->Radiación solar máxima
+Hi.D.D->Hi.D.D
+Heat.D.D->Heat.D.D
+Cool.Temp->Cool.Temp
+In.Hum->Humedad interior
+In.Dew->Punto de rocío interior
+In.Heat->Calor interior
+In.EMC->EMC interior
+In.Density->Densidad interior
+InAir.ET->InAir.ET
+X..Samp->X..Samp
+Wind.Tx->Wind.Tx
+Wind.Recept->Wind.Recept
+ISS.Int.->ISS.Int.

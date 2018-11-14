@@ -2,14 +2,16 @@
 
 <!--
 ##################################################################
-index.html
+editVars.html
 Autor: Tomas Galvez
 Para: CEAB, UVG, Guatemala
 Creado en agosto 2018
-Última modificación: 12/11/2018
+Última modificación: 14/11/2018
 
-Landing page o potencial pantalla de autenticación para sistema
-de gráfica de data meteorológica.
+Página para edición de nombre de variables que se despliegan en el
+graficador (porque los nombres de la base de datos muy feos). Se
+basa en un archivo de texto llamado prettyVars.txt, que debe estar
+en la misma carpeta que el resto del programa.
 
 Copyright (C) 2018  Tomas Gálvez P.
 
@@ -31,12 +33,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <html>
 	<body>
 		<center>
-			<form action = "./graficador">
-				<p>Ingrese su nombre: </p>
-				<input type = "text" name = "nombre"/>
+			<form action = "./editVars/go", method = "POST">
+				{% for key,var in variables.items() %}
+					{{ key }} se despliega como <input type = "text" name = "{{ key }}" value = "{{ var }}"/><br/>
+				{% endfor %}
+				<input type = "hidden" name = "nombre" value = "{{ nombre }}"/>
+				<input type = "hidden" name = "variables" value = "{{ variables }}"/>
 				<br/><br/>
-				<!--input type = "hidden" name = "table" value = ""/-->
-				<input type = "submit" value = "Ir"/>
+				<input type = "submit" name = "modify" value = "Modificar"/>
+				<input type = "submit" name = "cancel" value = "Cancelar"/>
 			</form>
 		</center>
 	</body>

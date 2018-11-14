@@ -3,7 +3,7 @@
 #Autor: Tomas Galvez
 #Para: CEAB, UVG, Guatemala
 #Creado en agosto 2018
-#Última modificación: 05/11/2018
+#Última modificación: 14/11/2018
 #
 #Aplicación FLASK para probar generación de gráficas de data
 #meteorológica usando el módulo graficas.py.
@@ -36,7 +36,7 @@ import os
 app = Flask(__name__)
 UPLOAD_FOLDER = getcwd() + "\\cargas\\"
 ALLOWED_EXTENSIONS = set(['txt', 'csv'])
-DOWNLOAD_FOLDER = getcwd() + "\\descargas\\" #Revisar como configurar correctamente el folder de descargas
+DOWNLOAD_FOLDER = getcwd() + "\\descargas\\"
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
 #app.config['SERVER_NAME'] = '127.0.0.1:5000/'
@@ -80,10 +80,51 @@ def cargarData():
 def index():
     return render_template('index.html')
 
-@app.route('/graficador/<filename>')
+@app.route('/graficador/descarga/<filename>')
 def download(filename):
-    #downloads = getcwd() + "\\descargas\\"
     return send_from_directory(directory=app.config['DOWNLOAD_FOLDER'], filename = filename, mimetype = 'text/csv', as_attachment = True)
+
+@app.route('/graficador/editVars', methods = ["POST"])
+def editVars():
+    if ("nombre" in request.form):
+        name = request.form['nombre']
+        debugPrint("Nombre recibido: " + name)
+    if ("variables" in request.form):
+        variables = request.form['variables']
+        debugPrint("Variables recibidas: " + variables)
+        diccionarioVariables = parseDict(variables)
+        return render_template('editVars.html', variables = diccionarioVariables, nombre = name)
+    else:
+        debugPrint("No venían las variables en el request.form")
+        return redirect('/graficador?nombre=' + name)
+
+@app.route('/graficador/editVars/go', methods = ["POST"])
+def go():
+    name = ""
+    if "nombre" in request.form:
+            name = request.form["nombre"]
+            
+    if "cancel" not in request.form:
+        try:
+            dic = parseDict(request.form['variables'])
+            debugPrint("El diccionario que se guardará es: " + str(dic))
+            with open("prettyVars.txt", 'w', encoding = 'latin-1') as f:
+                for key, var in dic.items():
+                    if key in request.form:
+                        val = request.form[key]
+                        debugPrint("Se encontró la clave " + key)
+                        if val != "":
+                            f.write(key + "->" + val + "\n")
+                        else:
+                            f.write(key + "->" + key + "\n")
+            f.close()
+        except Exception as err:
+            debugPrint("Ocurrió un problema al guardar los nombres asignados a cada variable")
+            debugPrint(err)
+        finally:
+            return redirect('/graficador?nombre=' + name)
+    else:
+        return redirect('/graficador?nombre=' + name)
 
 @app.route('/graficador', methods = ['GET'])
 @app.route('/graficador#grafica', methods = ['GET'])
@@ -91,16 +132,34 @@ def graficador():
     periodos = ['Por hora', 'Por día', 'Por mes']
     filenameForDownload = ""
     
-    name, variable, variables, periodo, tabla, tablas, fechaInicial, fechaFinal = getQueryParams()
+    name, variable, variables, periodo, tabla, tablas, fechaInicial, fechaFinal, scatter = getQueryParams()
+    variablesBonitas = {}
+    for var in variables:
+        variablesBonitas[var] = var
     debugPrint("Los datos que se obtuvieron son")
     debugPrint(name)
     debugPrint(variable)
     debugPrint(variables)
+    try:
+        with open("prettyVars.txt", encoding = 'latin-1') as f:
+            transformaciones = f.read()
+        f.close()
+
+        elementos = transformaciones.split("\n")
+        for elemento in elementos:
+            transf = elemento.split('->')
+            if transf[0] in variablesBonitas:
+                variablesBonitas[transf[0]] = transf[1]
+    except Exception as err:
+        debugPrint("Error al leer el archivo de variables bonitas. Se quedan con el nombre original.")
+        debugPrint(err)
+    debugPrint(variablesBonitas)
     debugPrint(periodo)
     debugPrint(tabla)
     debugPrint(tablas)
     debugPrint(fechaInicial)
     debugPrint(fechaFinal)
+    debugPrint(scatter)
     
     s = translateToQuery(variable, periodo, tabla, fechaInicial, fechaFinal)
     df = None
@@ -111,12 +170,13 @@ def graficador():
         except Exception as err:
             debugPrint("Hubo excepcion al intentar obtener los datos\n")
             debugPrint(err)
-            return render_template('graficador.html', nombre = name, variables = variables, periodos = periodos, tablas = tablas,
+            return render_template('graficador.html', nombre = name, variables = variablesBonitas, periodos = periodos, tablas = tablas,
                                        tabla = tabla,
                                        periodo = periodo,
                                        variable = variable,
                                        fechai = fechaInicial,
-                                       fechaf = fechaFinal)
+                                       fechaf = fechaFinal,
+                                       scatter = scatter)
 
         try:
             debugPrint("A punto de crear archivo descargable")
@@ -131,37 +191,50 @@ def graficador():
         finally:
             try:
                 df = getData(s, variable, periodo)
-                scatter = False
-                if (periodo == "Por hora"):
-                    scatter = True
-                grafica = plotear(df, variable, scatter = scatter)
+                #grafica = plotear(df, variable, scatter = scatter)
+                grafica = plotear(df, variable, variablesBonitas[variable], scatter = scatter)
                 debugPrint("Grafica generada\n")
 
-                return render_template('graficador.html', nombre = name, variables = variables, periodos = periodos, tablas = tablas,
+                return render_template('graficador.html', nombre = name, variables = variablesBonitas, periodos = periodos, tablas = tablas,
                                        tabla = tabla,
                                        periodo = periodo,
                                        variable = variable,
                                        fechai = fechaInicial,
                                        fechaf = fechaFinal,
+                                       scatter = scatter,
                                        graficamos = grafica, 
                                        filenameForDownload = filenameForDownload)
             except Exception as err:
                 debugPrint("Hubo excepcion al intentar graficar\n")
                 debugPrint(err)
-                return render_template('graficador.html', nombre = name, variables = variables, periodos = periodos, tablas = tablas,
+                return render_template('graficador.html', nombre = name, variables = variablesBonitas, periodos = periodos, tablas = tablas,
                                        tabla = tabla,
                                        periodo = periodo,
                                        variable = variable,
                                        fechai = fechaInicial,
-                                       fechaf = fechaFinal)
+                                       fechaf = fechaFinal,
+                                       scatter = scatter)
     else:
         debugPrint("s es None")
-        return render_template('graficador.html', nombre = name, variables = variables, periodos = periodos, tablas = tablas,
+        return render_template('graficador.html', nombre = name, variables = variablesBonitas, periodos = periodos, tablas = tablas,
                                        tabla = tabla,
                                        periodo = periodo,
                                        variable = variable,
                                        fechai = fechaInicial,
-                                       fechaf = fechaFinal)
+                                       fechaf = fechaFinal,
+                                       scatter = scatter)
+
+def parseDict(d):
+    d2 = d.strip('{}')
+    listaVariables = d2.split(',')
+    diccionarioVariables = {}
+    for var in listaVariables:
+        pedazos = var.split(':')
+        pedazos[0] = pedazos[0].strip("' ")
+        pedazos[1] = pedazos[1].strip("' ")
+        diccionarioVariables[pedazos[0]] = pedazos[1]
+    debugPrint("El diccionario que leyó fue: " + str(diccionarioVariables))
+    return(diccionarioVariables)
 
 #De http://flask.pocoo.org/docs/1.0/patterns/fileuploads/
 def allowed_file(filename):
@@ -170,6 +243,7 @@ def allowed_file(filename):
    
 def getQueryParams():
     name = tabla = fechaInicial = fechaFinal = variable = periodo = ""
+    scatter = False
     
     if ("nombre" in request.args):
         name = request.args['nombre']
@@ -208,7 +282,10 @@ def getQueryParams():
     debugPrint("La xvar es " + variable)
     debugPrint("La yvar es " + periodo)
 
-    return(name, variable, variables, periodo, tabla, tablas, fechaInicial, fechaFinal)
+    if ('scatter' in request.args):
+        scatter = request.args['scatter']
+
+    return(name, variable, variables, periodo, tabla, tablas, fechaInicial, fechaFinal, scatter)
 
 def formatDate(y, m, d):
     return str(y) + "-" + str(int(m / 10)) + str(m % 10) + "-" + str(int(d / 10)) + str(d % 10)

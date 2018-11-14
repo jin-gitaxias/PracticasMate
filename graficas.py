@@ -3,7 +3,7 @@
 #Autor: Tomas Galvez
 #Para: CEAB, UVG, Guatemala
 #Creado en septiembre 2018
-#Última modificación: 29/10/2018
+#Última modificación: 12/11/2018
 #
 #Módulo de funciones para generación de gráficas univariable en
 #HTML con matplotlib y mpld3.
@@ -71,7 +71,7 @@ def plotConPlugins(fig):#, plot=None):
 
     return plot_url
 
-def plotear(df, campo, scatter = True, xName = 'Date'):
+def plotear(df, campo, campoBonito = None, scatter = True, xName = 'Date'):
     #img = io.BytesIO()
     #pyplt.clf()
     fig = pyplt.figure()
@@ -82,9 +82,12 @@ def plotear(df, campo, scatter = True, xName = 'Date'):
     else:
         p = pyplt.plot(df[xName], df[campo])
 		
-    pyplt.xlabel(xName)
-    pyplt.ylabel(campo)
-    pyplt.title("Cambios en el registro de " + str(campo))
+    pyplt.xlabel("Fechas")
+    campoDespliegue = campo
+    if campoBonito is not None:
+        campoDespliegue = campoBonito
+    pyplt.ylabel(campoDespliegue)
+    pyplt.title("Cambios en el registro de " + str(campoDespliegue))
 
     debugPrint("Antes de mostrar el contenido de fig")
     debugPrint(fig)

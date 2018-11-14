@@ -6,7 +6,7 @@ graficador.html
 Autor: Tomas Galvez
 Para: CEAB, UVG, Guatemala
 Creado en agosto 2018
-Última modificación: 05/11/2018
+Última modificación: 14/11/2018
 
 Frontend para web app de prueba graficadorSencillo.py.
 
@@ -29,65 +29,77 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 <html>
 	<body>
-		<h1>Bienvenid@</h1>
-		{% if nombre %}
-			<h2>{{ nombre }}</h2>
-			{% if nombre == 'admin'%} <!-- Sólo por poner algo. Esto debería requerir un apropiado proceso de autenticación previo. -->
-				<div>
-					<h2> Panel de administración </h2>
-					<div>
-						<form action = "/cargarData" method = "POST" enctype="multipart/form-data">
-							<input type = "hidden" name = "nombre" value = "{{ nombre }}"/>
-							Seleccione archivo CSV o TXT con formato CSV:<br/>
-							<input type = "file" name = "file"><br/><br/>
-							<input type = "submit" value = "Cargar"/>
-						</form>
-					<div/>
-					<div>
-					<div/>
-				</div>
-			{% endif %}
-		{% endif %}
-		<form action = "#grafica">
-			<div class = "opciones">
-				<p>Elija la tabla que desea consultar: </p>
-				<select name = "table">
-					{% for t in tablas %}
-						<option {% if tabla and t == tabla %} selected {% endif %}>{{ t }}</option>
-					{% endfor %}
-				</select>
-				<p>Elija la variable que desea graficar:</p>
-				<select name = "xvar">
-					{% for var in variables %}
-						<option {% if variable and var == variable %} selected {% endif %}>{{ var }}</option>
-					{% endfor %}
-				</select>
-				<br/>
-				<p>Elija la periodicidad de la gráfica:</p>
-				<select name = "yvar">
-					{% for per in periodos %}
-							<option {% if periodo and per == periodo %} selected {% endif %}>{{ per }}</option>
-					{% endfor %}
-				</select>
-				<br/><br/>
-				Fecha de inicio: <input type = "date" name = "fechai" value = "{{ fechai }}"/>
-				&nbsp;
-				Fecha final: <input type = "date" name = "fechaf" value = "{{ fechaf }}"/>
-			</div>
+		<div style = "width:100%">
+			<h1>Bienvenid@ {% if nombre %} {{ nombre }} {% endif %}</h1>
 			{% if nombre %}
-				<input type = "hidden" name = "nombre" value = "{{ nombre }}"/>
+				{% if nombre == 'admin'%} <!-- Sólo por poner algo. Esto debería requerir un apropiado proceso de autenticación previo. -->
+					<div style = "width:100%;border:1pt;border-style:solid;overflow:hidden">
+						<span style = "font-size:1.5em;font-weight:bold"> Panel de administración </span><br/><br/>
+						<div style = "width:50%;float:left">
+							<span style = "font-size:1em">Carga de archivos CSV a la base de datos</span><br/><br/>
+							<form action = "/cargarData" method = "POST" enctype="multipart/form-data">
+								<input type = "hidden" name = "nombre" value = "{{ nombre }}"/>
+								Seleccione archivo CSV o TXT con formato CSV:<br/>
+								<input type = "file" name = "file"><br/><br/>
+								<input type = "submit" value = "Cargar"/>
+							</form>
+						</div>
+						<div style = "width:50%;float:right">
+							<span style = "font-size:1em">Editor de nombres de despliegue para los cambios</span><br/><br/>
+							<form action="/graficador/editVars" method = "POST">
+								<input type = "hidden" name = "variables" value = "{{ variables }}"/>
+								<input type = "hidden" name = "nombre" value = "{{ nombre }}"/>
+								<input type = "submit" value = "Editar nombre de despliegue de las variables"/>
+							</form>
+						</div>
+					</div>
+				{% endif %}
 			{% endif %}
-			<br/>
-			<input type = "submit" value = "Graficar!"/>
-			{% if filenameForDownload is defined and filenameForDownload != '' %}
-				&nbsp;&nbsp;
-				<a href="/graficador/{{ filenameForDownload }}.csv">Descargar datos graficados</a>
-			{% endif %}
-		</form>
-		{% if graficamos %}
-			<h3>La grafica (chan chan chaaan):</h3><br/>
-			<!--img src="data:image/png;base64,{{ graficamos }}"/-->
-			{{ graficamos|safe }}
-		{% endif %}
+			<div>
+				<form action = "#grafica">
+					<div class = "opciones">
+						<p>Elija la tabla que desea consultar: </p>
+						<select name = "table">
+							{% for t in tablas %}
+								<option {% if tabla and t == tabla %} selected {% endif %}>{{ t }}</option>
+							{% endfor %}
+						</select>
+						<p>Elija la variable que desea graficar:</p>
+						<select name = "xvar">
+							{% for var, prettyVar in variables.items() %}
+								<option {% if variable and var == variable %} selected {% endif %} value = {{ var }}>{{ prettyVar }}</option>
+							{% endfor %}
+						</select>
+						<br/>
+						<p>Elija la periodicidad de la gráfica:</p>
+						<select name = "yvar">
+							{% for per in periodos %}
+									<option {% if periodo and per == periodo %} selected {% endif %}>{{ per }}</option>
+							{% endfor %}
+						</select>
+						<br/><br/>
+						Fecha de inicio: <input type = "date" name = "fechai" value = "{{ fechai }}"/>
+						&nbsp;
+						Fecha final: <input type = "date" name = "fechaf" value = "{{ fechaf }}"/>
+						<br/>
+						Dispersión: <input type = "checkbox" name = "scatter" {% if scatter == 'on' %} checked {% endif %}/>
+					</div>
+					{% if nombre %}
+						<input type = "hidden" name = "nombre" value = "{{ nombre }}"/>
+					{% endif %}
+					<br/>
+					<input type = "submit" value = "Graficar!"/>
+					{% if filenameForDownload is defined and filenameForDownload != '' %}
+						&nbsp;&nbsp;
+						<a href="/graficador/descarga/{{ filenameForDownload }}.csv">Descargar datos graficados</a>
+					{% endif %}
+				</form>
+				{% if graficamos %}
+					<h3>La grafica (chan chan chaaan):</h3><br/>
+					<!--img src="data:image/png;base64,{{ graficamos }}"/-->
+					{{ graficamos|safe }}
+				{% endif %}
+			</div>
+		</div>
 	</body>
 </html>

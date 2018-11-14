@@ -5,3 +5,4 @@ __pycache__/
 .RData
 .Rhistory
 .Renviron
+databaseLocal.ini
